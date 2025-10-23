@@ -13,7 +13,7 @@ config_version=5
 config/name="frastal"
 config/version="0.4.2"
 config/tags=PackedStringArray("shader", "template")
-run/main_scene="res://canvas.tscn"
+run/main_scene="uid://bb46dd2vh0my8"
 config/features=PackedStringArray("4.5", "Forward Plus")
 boot_splash/bg_color=Color(0.411765, 0, 0.411765, 1)
 boot_splash/show_image=false
@@ -33,7 +33,6 @@ settings/physics_interpolation/enable_warnings=false
 
 window/size/viewport_width=511
 window/size/viewport_height=511
-window/size/mode=3
 window/stretch/aspect="expand"
 window/vsync/vsync_mode=0
 

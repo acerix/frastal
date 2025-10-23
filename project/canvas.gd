@@ -1,61 +1,97 @@
 extends ColorRect
 
-func _input(_event):
+@onready var max_iterations_slider = $Controls/MaxIterations
+@onready var two_slider = $Controls/Two
+@onready var zoom_slider = $Controls/Zoom
+@onready var x_slider = $Controls/X
+@onready var y_slider = $Controls/Y
+
+var p = Vector2(0, -0.75)
+var is_dragging = false
+var drag_start_p = Vector2.ZERO
+var drag_start_mouse_pos = Vector2.ZERO
+
+var is_zooming = false
+const ZOOM_SPEED = 0.5
+
+func _input(event):
 	# quit when Esc is pressed
 	if Input.is_action_pressed("ui_cancel"):
 		get_tree().quit()
+
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			if get_node("Controls").get_rect().has_point(event.position):
+				return
+
+			is_dragging = event.is_pressed()
+			if is_dragging:
+				drag_start_p = p
+				drag_start_mouse_pos = event.position
+		
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if get_node("Controls").get_rect().has_point(event.position):
+				return
+			is_zooming = event.is_pressed()
+
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			handle_zoom(event.position, zoom_slider.get_value() * 0.1)
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			handle_zoom(event.position, zoom_slider.get_value() * -0.1)
+
+	if event is InputEventMagnifyGesture:
+		handle_zoom(event.position, zoom_slider.get_value() * (event.factor - 1.0))
+
+	if event is InputEventMouseMotion and is_dragging:
+		var zoom = zoom_slider.get_value()
+		var viewport_height = get_viewport_rect().size.y
+		
+		if viewport_height > 0:
+			var mouse_delta = event.position - drag_start_mouse_pos
+			p = drag_start_p - (mouse_delta / viewport_height) / exp(zoom - 1.25)
+			
+			x_slider.set_value(p.x)
+			y_slider.set_value(p.y)
+
+func handle_zoom(mouse_pos, zoom_delta):
+	var zoom_before = zoom_slider.get_value()
+	var zoom_after = zoom_before + zoom_delta
 	
+	if zoom_after == zoom_before:
+		return
 
-# target beats per minute (to dance to)
-const target_bpm : float = 140
+	var viewport_size = get_viewport_rect().size
+	if viewport_size.y <= 0:
+		return
+		
+	var ratio = viewport_size.x / viewport_size.y
+	
+	var uv_norm_x = (mouse_pos.x / viewport_size.x - 0.5) * ratio
+	var uv_norm_y = (mouse_pos.y / viewport_size.y - 0.5)
+	var uv_norm = Vector2(uv_norm_x, uv_norm_y)
 
-# "seconds per beat" 
-const spb : float = 60 / target_bpm
+	var p_before = p
+	var p_after = p_before + uv_norm * (1 / exp(zoom_before - 1.25) - 1 / exp(zoom_after - 1.25))
 
-# position (translation of canvas)
-var p = Vector2(0, -0.75)
-
-# time when the animation started
-var start : float = Time.get_unix_time_from_system()
+	p = p_after
+	x_slider.set_value(p.x)
+	y_slider.set_value(p.y)
+	zoom_slider.set_value(zoom_after)
 
 func _process(_delta):
-	var now = Time.get_unix_time_from_system()
+	if is_zooming:
+		handle_zoom(get_viewport().get_mouse_position(), ZOOM_SPEED * _delta)
+
+	p.x = x_slider.get_value()
+	p.y = y_slider.get_value()
 	
-	# time in seconds since the animation started
-	#var t = now - start
-	
-	# time in seconds since the Epoch - sync animation with other devices
-	var t = now
-	
-	# "current angle in the beat/bar" (goes from zero when the beat starts, to 2π when the next beat starts)
-	var theta = 2 * PI * t / spb
-	
-	# functions varying in time with the beat
-	var f1 = 0.7 * sin(theta / 4)
-	var f2 = 1.3 * sin(theta / 16)
-	var f3 = sin(theta / 7)
-	var f4 = 3 * sin(theta / 96)
-	
-	# vary zoom level
-	var zoom = (f1 + f2 + f3 + f4) / 2 + sin(theta / 31) / 8
-	
-	# vary translation (centre position)
-	p.x = sin(theta / 101) * sin(theta / 103) / 2
-	p.y = -1 + sin(theta / 101) * sin(theta / 104) / 2 + sin(theta) / 32
-	
-	# vary the value of "²" in "z ↦ z²+c"
-	var tiq = 2 + f2 + tan(theta / 255) # 2.0 = mandelbrot set
-	#var tiq = 4.5 + f2 + tan(theta / 128) # 4.5 = stayin' alive 💗
-	
-	# vary the number of calculation iterations before bailing
-	var iteration_limit = 512 + roundi(512 * cos(theta / 256))
-	
+	var viewport_size = get_viewport_rect().size
+	if viewport_size.y > 0:
+		var ratio = viewport_size.x / viewport_size.y
+		$".".material.set("shader_parameter/ratio", ratio)
+
 	# update shader params
 	$".".material.set("shader_parameter/position", p)
-	$".".material.set("shader_parameter/zoom", zoom)
-	$".".material.set("shader_parameter/tiq", tiq)
-	$".".material.set("shader_parameter/iteration_limit", iteration_limit)
-
-	#print('"2" = ', tiq)
-	#print('"its" = ', iteration_limit)
-	
+	$".".material.set("shader_parameter/zoom", zoom_slider.get_value())
+	$".".material.set("shader_parameter/tiq", two_slider.get_value())
+	$".".material.set("shader_parameter/iteration_limit", max_iterations_slider.get_value())

@@ -1,10 +1,10 @@
 shader_type canvas_item;
 
 uniform vec2 position = vec2(0, -0.75);
-uniform float zoom: hint_range(0, 15) = 0.2;
+uniform float zoom: hint_range(-5, 15) = 0.2;
 uniform float ratio = 1;
 uniform float tiq = 2.0; // two, "in quotes"... the "²" in "z ↦ z²+c"
-uniform int iteration_limit = 64;
+uniform int iteration_limit = 128;
 uniform sampler2D palette_image;
 
 // gpu reaches 100% around 500, when mandeldude goes big on the screen
