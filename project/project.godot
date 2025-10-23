@@ -1,0 +1,57 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="MandelDance"
+config/version="0.4.2"
+config/tags=PackedStringArray("shader", "template")
+run/main_scene="res://canvas.tscn"
+config/features=PackedStringArray("4.5", "Forward Plus")
+boot_splash/bg_color=Color(0.411765, 0, 0.411765, 1)
+boot_splash/show_image=false
+boot_splash/use_filter=false
+boot_splash/image="uid://bhehwn4m3du1j"
+config/icon="uid://bhehwn4m3du1j"
+
+[audio]
+
+driver/driver="sss"
+
+[debug]
+
+settings/physics_interpolation/enable_warnings=false
+
+[display]
+
+window/size/viewport_width=511
+window/size/viewport_height=511
+window/size/mode=3
+window/stretch/aspect="expand"
+window/vsync/vsync_mode=0
+
+[gui]
+
+fonts/dynamic_fonts/use_oversampling=false
+
+[internationalization]
+
+rendering/root_node_auto_translate=false
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
+shader_compiler/shader_cache/strip_debug=true
+shading/overrides/force_vertex_shading=true
+shading/overrides/force_lambert_over_burley=true
+textures/default_filters/use_nearest_mipmap_filter=true
+textures/default_filters/anisotropic_filtering_level=1
+anti_aliasing/screen_space_roughness_limiter/enabled=false
