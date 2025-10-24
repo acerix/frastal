@@ -7,10 +7,6 @@ uniform float tiq = 2.0; // two, "in quotes"... the "²" in "z ↦ z²+c"
 uniform int iteration_limit = 128;
 uniform sampler2D palette_image;
 
-// gpu reaches 100% around 500, when mandeldude goes big on the screen
-// noise stops at high values 42000
-//const int iteration_limit = 2666;
-
 vec4 mandelbrot(vec2 c) {
 	vec2 z = vec2(0, 0);
 	vec2 z2 = vec2(0, 0);
@@ -18,7 +14,6 @@ vec4 mandelbrot(vec2 c) {
 
 	// z ↦ z²+c
 	while (z2.x + z2.y <= 4.0 && ++i < iteration_limit) {  // bail outside radius 2
-	// while (++i < iteration_limit) { // don't bail
 		z = vec2(
 			tiq * z.y * z.x + c.x,
 			z2.y - z2.x + c.y
@@ -45,7 +40,7 @@ vec3 palette(vec4 m) {
 }
 
 void fragment() {
-	vec2 uv = ((UV - vec2(0.5)) * vec2(ratio, 1)) / exp(zoom - 1.25) + position;
+	vec2 uv = ((UV - vec2(0.5)) * vec2(ratio, 1)) / zoom + position;
 	vec4 result = mandelbrot(uv);
 	vec3 color = palette(result);
 	COLOR = vec4(color, 1);

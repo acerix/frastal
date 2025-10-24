@@ -48,7 +48,7 @@ func _input(event):
 		
 		if viewport_height > 0:
 			var mouse_delta = event.position - drag_start_mouse_pos
-			p = drag_start_p - (mouse_delta / viewport_height) / exp(zoom - 1.25)
+			p = drag_start_p - (mouse_delta / viewport_height) / zoom
 			
 			x_slider.set_value(p.x)
 			y_slider.set_value(p.y)
@@ -71,7 +71,7 @@ func handle_zoom(mouse_pos, zoom_delta):
 	var uv_norm = Vector2(uv_norm_x, uv_norm_y)
 
 	var p_before = p
-	var p_after = p_before + uv_norm * (1 / exp(zoom_before - 1.25) - 1 / exp(zoom_after - 1.25))
+	var p_after = p_before + uv_norm * (1 / zoom_before - 1 / zoom_after)
 
 	p = p_after
 	x_slider.set_value(p.x)

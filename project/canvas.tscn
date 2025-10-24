@@ -23,7 +23,6 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-color = Color(0.411765, 0, 0.411765, 1)
 script = ExtResource("3_n3t7b")
 metadata/_edit_lock_ = true
 
@@ -55,9 +54,10 @@ value = 2.0
 [node name="Zoom" parent="Controls" instance=ExtResource("4_z8w1f")]
 layout_mode = 2
 label = "Zoom"
-min_value = -5.0
-max_value = 15.0
-value = 0.2
+min_value = -999999.0
+max_value = 999999.0
+step = 0.1
+value = 1.0
 
 [node name="X" parent="Controls" instance=ExtResource("4_z8w1f")]
 layout_mode = 2
