@@ -12,7 +12,13 @@ var drag_start_p = Vector2.ZERO
 var drag_start_mouse_pos = Vector2.ZERO
 
 var is_zooming = false
-const ZOOM_SPEED = 0.5
+var zoom_mag = 1.0
+
+func get_viewport_aspect_ratio():
+	var viewport_size = get_viewport_rect().size
+	if viewport_size.y == 0:
+		return 1
+	return viewport_size.x / viewport_size.y
 
 func _input(event):
 	# quit when Esc is pressed
@@ -35,12 +41,12 @@ func _input(event):
 			is_zooming = event.is_pressed()
 
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			handle_zoom(event.position, zoom_slider.get_value() * 0.1)
+			handle_zoom(event.position, zoom_mag)
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			handle_zoom(event.position, zoom_slider.get_value() * -0.1)
+			handle_zoom(event.position, -zoom_mag)
 
 	if event is InputEventMagnifyGesture:
-		handle_zoom(event.position, zoom_slider.get_value() * (event.factor - 1.0))
+		handle_zoom(event.position, zoom_mag * event.factor)
 
 	if event is InputEventMouseMotion and is_dragging:
 		var zoom = zoom_slider.get_value()
@@ -54,44 +60,62 @@ func _input(event):
 			y_slider.set_value(p.y)
 
 func handle_zoom(mouse_pos, zoom_delta):
+	if zoom_delta == 0:
+		return
+
 	var zoom_before = zoom_slider.get_value()
 	var zoom_after = zoom_before + zoom_delta
-	
-	if zoom_after == zoom_before:
-		return
 
 	var viewport_size = get_viewport_rect().size
 	if viewport_size.y <= 0:
 		return
-		
-	var ratio = viewport_size.x / viewport_size.y
-	
-	var uv_norm_x = (mouse_pos.x / viewport_size.x - 0.5) * ratio
-	var uv_norm_y = (mouse_pos.y / viewport_size.y - 0.5)
-	var uv_norm = Vector2(uv_norm_x, uv_norm_y)
+
+	var viewport_aspect_ratio = get_viewport_aspect_ratio()
+
+	var uv_centered = mouse_pos / viewport_size - Vector2(0.5, 0.5)
+	var mouse_uv_norm = uv_centered * Vector2(viewport_aspect_ratio, 1.0)
 
 	var p_before = p
-	var p_after = p_before + uv_norm * (1 / zoom_before - 1 / zoom_after)
 
-	p = p_after
-	x_slider.set_value(p.x)
-	y_slider.set_value(p.y)
+	# The core idea is to keep the fractal coordinate under the mouse constant.
+	# fractal_coord = p + uv_norm / zoom
+	# p_before + uv_norm / zoom_before = p_after + uv_norm / zoom_after
+	# p_after = p_before + uv_norm * (1/zoom_before - 1/zoom_after)
+	if zoom_before != 0 && zoom_after != 0:
+		p = p_before + mouse_uv_norm * (1.0/zoom_before - 1.0/zoom_after)
+		x_slider.set_value(p.x)
+		y_slider.set_value(p.y)
+
 	zoom_slider.set_value(zoom_after)
-
+	
 func _process(_delta):
 	if is_zooming:
-		handle_zoom(get_viewport().get_mouse_position(), ZOOM_SPEED * _delta)
+		handle_zoom(get_viewport().get_mouse_position(), 32 * zoom_mag * _delta)
 
-	p.x = x_slider.get_value()
-	p.y = y_slider.get_value()
+	if !is_zooming and !is_dragging:
+		p.x = x_slider.get_value()
+		p.y = y_slider.get_value()
 	
-	var viewport_size = get_viewport_rect().size
-	if viewport_size.y > 0:
-		var ratio = viewport_size.x / viewport_size.y
-		$".".material.set("shader_parameter/ratio", ratio)
+	var viewport_aspect_ratio = get_viewport_aspect_ratio()
+	$".".material.set("shader_parameter/viewport_aspect_ratio", viewport_aspect_ratio)
 
+	var zoom = zoom_slider.get_value()
+	zoom_mag = abs(zoom) / 8
+	
+	if zoom == 0:
+		# reset positions when they go to ∞
+		x_slider.set_step(0)
+		y_slider.set_step(0)
+	else:
+		var translate_step = 1 / zoom_mag / 256
+		x_slider.set_step(translate_step)
+		y_slider.set_step(translate_step * viewport_aspect_ratio)
+		
+	var zoom_step = max(zoom_mag / 2, 0.0001)
+	zoom_slider.set_step(zoom_step)
+	
 	# update shader params
 	$".".material.set("shader_parameter/position", p)
-	$".".material.set("shader_parameter/zoom", zoom_slider.get_value())
-	$".".material.set("shader_parameter/tiq", two_slider.get_value())
+	$".".material.set("shader_parameter/zoom", zoom)
+	$".".material.set("shader_parameter/two_in_quotes", two_slider.get_value())
 	$".".material.set("shader_parameter/iteration_limit", max_iterations_slider.get_value())

@@ -42,3 +42,7 @@ func set_value(new_value):
 	slider_node.value = new_value
 
 	line_edit_node.text = str(new_value)
+
+
+func set_step(new_step: float):
+	slider_node.step = new_step

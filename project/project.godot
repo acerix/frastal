@@ -34,7 +34,6 @@ settings/physics_interpolation/enable_warnings=false
 window/size/viewport_width=511
 window/size/viewport_height=511
 window/stretch/aspect="expand"
-window/vsync/vsync_mode=0
 
 [gui]
 

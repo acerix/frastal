@@ -1,9 +1,9 @@
 shader_type canvas_item;
 
 uniform vec2 position = vec2(0, -0.75);
-uniform float zoom: hint_range(-5, 15) = 0.2;
-uniform float ratio = 1;
-uniform float tiq = 2.0; // two, "in quotes"... the "²" in "z ↦ z²+c"
+uniform float zoom = 0.2;
+uniform float viewport_aspect_ratio = 1.0;
+uniform float two_in_quotes = 2.0; // the variable "²" in "z ↦ z²+c"
 uniform int iteration_limit = 128;
 uniform sampler2D palette_image;
 
@@ -13,9 +13,9 @@ vec4 mandelbrot(vec2 c) {
 	int i = 0;
 
 	// z ↦ z²+c
-	while (z2.x + z2.y <= 4.0 && ++i < iteration_limit) {  // bail outside radius 2
+	while (z2.x + z2.y <= 4.0 && ++i < iteration_limit) { // bail outside radius 2
 		z = vec2(
-			tiq * z.y * z.x + c.x,
+			two_in_quotes * z.y * z.x + c.x,
 			z2.y - z2.x + c.y
 		);
 		z2 = z * z;
@@ -31,7 +31,7 @@ vec4 mandelbrot(vec2 c) {
 
 vec3 palette(vec4 m) {
 	int color_count = textureSize(palette_image, 0).x - 1;
-	if (abs(m.w - 1.0) < 0.0001) { // if (m.w == 1.0), ignoring floating-point errors < ε
+	if (abs(m.w - 1.0) < 0.0001) { // if (m.w == 1.0), but ignore floating-point errors < ε
 		return texelFetch(palette_image, ivec2(0, 0), 0).rgb;
 	}
 	vec3 color1 = texelFetch(palette_image, ivec2(1 + int(m.z) % color_count, 0), 0).rgb;
@@ -40,7 +40,7 @@ vec3 palette(vec4 m) {
 }
 
 void fragment() {
-	vec2 uv = ((UV - vec2(0.5)) * vec2(ratio, 1)) / zoom + position;
+	vec2 uv = (UV - vec2(0.5)) * vec2(viewport_aspect_ratio, 1) / zoom + position;
 	vec4 result = mandelbrot(uv);
 	vec3 color = palette(result);
 	COLOR = vec4(color, 1);
