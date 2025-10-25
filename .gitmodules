@@ -1,0 +1,3 @@
+[submodule "modules/ui_widget"]
+	path = modules/ui_widget
+	url = git@github.com:ThyMajesty/ui_widget.git

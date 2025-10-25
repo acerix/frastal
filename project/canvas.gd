@@ -5,19 +5,22 @@ extends ColorRect
 @onready var zoom_slider = $Controls/Zoom
 @onready var x_slider = $Controls/X
 @onready var y_slider = $Controls/Y
+@onready var palette_flow_widget = $Controls/PalleteFlow
 
-var p = Vector2(0, -0.75)
+var p = Vector2.ZERO
 var is_dragging = false
 var drag_start_p = Vector2.ZERO
 var drag_start_mouse_pos = Vector2.ZERO
 
 var is_zooming = false
 var zoom_mag = 1.0
+var palette_offset = 0
+var t = 0.0
 
 func get_viewport_aspect_ratio():
 	var viewport_size = get_viewport_rect().size
 	if viewport_size.y == 0:
-		return 1
+		return 1.0
 	return viewport_size.x / viewport_size.y
 
 func _input(event):
@@ -88,9 +91,12 @@ func handle_zoom(mouse_pos, zoom_delta):
 
 	zoom_slider.set_value(zoom_after)
 	
-func _process(_delta):
+func _process(delta):
+	#var t = Time.get_unix_time_from_system()
+	t += delta
+	
 	if is_zooming:
-		handle_zoom(get_viewport().get_mouse_position(), 32 * zoom_mag * _delta)
+		handle_zoom(get_viewport().get_mouse_position(), 32 * zoom_mag * delta)
 
 	if !is_zooming and !is_dragging:
 		p.x = x_slider.get_value()
@@ -98,7 +104,7 @@ func _process(_delta):
 	
 	var viewport_aspect_ratio = get_viewport_aspect_ratio()
 	$".".material.set("shader_parameter/viewport_aspect_ratio", viewport_aspect_ratio)
-
+	
 	var zoom = zoom_slider.get_value()
 	zoom_mag = abs(zoom) / 8
 	
@@ -107,15 +113,25 @@ func _process(_delta):
 		x_slider.set_step(0)
 		y_slider.set_step(0)
 	else:
-		var translate_step = 1 / zoom_mag / 256
+		var translate_step = 1 / (zoom_mag * 256)
 		x_slider.set_step(translate_step)
 		y_slider.set_step(translate_step * viewport_aspect_ratio)
 		
 	var zoom_step = max(zoom_mag / 2, 0.0001)
 	zoom_slider.set_step(zoom_step)
 	
+	var iteration_limit = max_iterations_slider.get_value()
+	#iteration_limit += roundi(iteration_limit * sin(t)) + 2
+	
+	var palette_flow = palette_flow_widget._get_value()
+	#if palette_flow != 0:
+		#palette_offset += palette_flow
+	palette_offset += roundi(palette_flow * sin(t / 8))
+
 	# update shader params
 	$".".material.set("shader_parameter/position", p)
 	$".".material.set("shader_parameter/zoom", zoom)
 	$".".material.set("shader_parameter/two_in_quotes", two_slider.get_value())
-	$".".material.set("shader_parameter/iteration_limit", max_iterations_slider.get_value())
+	#$".".material.set("shader_parameter/iteration_limit", max_iterations_slider.get_value())
+	$".".material.set("shader_parameter/iteration_limit", iteration_limit)
+	$".".material.set("shader_parameter/palette_offset", palette_offset)

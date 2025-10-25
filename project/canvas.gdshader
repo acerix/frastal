@@ -5,6 +5,7 @@ uniform float zoom = 0.2;
 uniform float viewport_aspect_ratio = 1.0;
 uniform float two_in_quotes = 2.0; // the variable "²" in "z ↦ z²+c"
 uniform int iteration_limit = 128;
+uniform int palette_offset = 0;
 uniform sampler2D palette_image;
 
 vec4 mandelbrot(vec2 c) {
@@ -34,8 +35,9 @@ vec3 palette(vec4 m) {
 	if (abs(m.w - 1.0) < 0.0001) { // if (m.w == 1.0), but ignore floating-point errors < ε
 		return texelFetch(palette_image, ivec2(0, 0), 0).rgb;
 	}
-	vec3 color1 = texelFetch(palette_image, ivec2(1 + int(m.z) % color_count, 0), 0).rgb;
-	vec3 color2 = texelFetch(palette_image, ivec2(1 + (int(m.z) + 1) % color_count, 0), 0).rgb;
+	int mz = int(m.z) + palette_offset;
+	vec3 color1 = texelFetch(palette_image, ivec2(1 + mz % color_count, 0), 0).rgb;
+	vec3 color2 = texelFetch(palette_image, ivec2(1 + (mz + 1) % color_count, 0), 0).rgb;
 	return mix(color1, color2, fract(m.z));
 }
 

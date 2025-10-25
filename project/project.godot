@@ -35,7 +35,10 @@ window/size/viewport_width=511
 window/size/viewport_height=511
 window/size/mode=3
 window/stretch/aspect="expand"
-window/vsync/vsync_mode=0
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/ui_widget/plugin.cfg")
 
 [gui]
 
